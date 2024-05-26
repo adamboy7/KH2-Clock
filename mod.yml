@@ -1,0 +1,7 @@
+title: Pause Menu Clock
+description: Add clock and stopwatch functionality to the pause menu. L2+R2+Dpad for hotkeys. Left for 12 hour, up for 24 hour, right to restore play time, down for stopwatch.
+assets:
+- name: scripts/Clock.lua
+  method: copy
+  source:
+  - name: Clock.lua
