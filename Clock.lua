@@ -3,15 +3,14 @@ LUAGUI_AUTH = "adamboy7"
 LUAGUI_DESC = "Add clock and stopwatch functionality to the pause menu"
 local canExecute = false
 
-local offset = 0x56454E
-local LoadingIndicator = 0x8E9DA0
-local game_Time = 0x9A94F4
-local input = 0x29F89F0
+local LoadingIndicator = 0x8EC540
+local game_Time = 0x9ABC74
+local input = 0xBF3120
 
 local timer_Start = os.clock()
 local timer_End = os.clock()
 local heart = false
-local bounce = ReadLong(input - offset)
+local bounce = ReadLong(input)
 
 local mode = Nil
 
@@ -41,44 +40,45 @@ end
 
 function calculate_Game_Time() -- Re-calculate game time from the timers on the world map
 	-- World of Darkness, Twilight Town, Destiny Islands, Hollow Bastion, Beast's Castle, Olympus Coliseum, Agrabah, Land of Dragons, 100 Acre Wood, Pride Lands, Atlantica, Disney Castle, Timeless River, Halloween Town, World Map, Port Royal, Space Paranoids, The World that Never Was
-	world_Timers = {0x9A9500, 0x9A9504, 0x9A9508, 0x9A950C, 0x9A9510, 0x9A9514, 0x9A9518, 0x9A951C, 0x9A9520, 0x9A9524, 0x9A9528, 0x9A952C, 0x9A9530, 0x9A9534, 0x9A9538, 0x9A953C, 0x9A9540, 0x9A9544}
+	world_Timers = {0x9ABC80, 0x9ABC84, 0x9ABC88, 0x9ABC8C, 0x9ABC90, 0x9ABC94, 0x9ABC98, 0x9ABC9C, 0x9ABCA0, 0x9ABCA4, 0x9ABCA8, 0x9ABCAC, 0x9ABCB0, 0x9ABCB4, 0x9ABCB8, 0x9ABCBC, 0x9ABCC0, 0x9ABCC4}
+
 	calculated_Game_Time = 0
 	for _, address in ipairs(world_Timers) do
-		calculated_Game_Time = calculated_Game_Time + ReadInt(address - offset)
+		calculated_Game_Time = calculated_Game_Time + ReadInt(address)
 	end
 	return calculated_Game_Time
 end
 
 function clock()
 	if mode == 12 then
-		WriteInt(game_Time - offset, get_Time_12_Hour()) -- Write the time in 12 hour format
+		WriteInt(game_Time, get_Time_12_Hour()) -- Write the time in 12 hour format
 	end
 
 	if mode == 24 then
-		WriteInt(game_Time - offset, get_Time_24_Hour()) -- Write the time in 24 hour format
+		WriteInt(game_Time, get_Time_24_Hour()) -- Write the time in 24 hour format
 	end
 end
 
 function timer()
     if heart == true then
-        WriteInt(LoadingIndicator - offset, 1119092736) -- Enable Heart icon
+        WriteInt(LoadingIndicator, 1119092736) -- Enable Heart icon
     end
 
     if mode == "Timer" and heart == true then
         runtime = ((os.clock() - timer_Start) * 60) * 60 -- Convert seconds to minutes and minutes to hours for better timer resolution
         if runtime <= 12959999 then
-            WriteInt(game_Time - offset, runtime)
+            WriteInt(game_Time, runtime)
         else
-            WriteInt(game_Time - offset, (runtime / 60)) -- Timer reached an hour, return to standard units
+            WriteInt(game_Time, (runtime / 60)) -- Timer reached an hour, return to standard units
         end
     end
 
     if mode == "Timer" and heart == false then
         runtime = ((timer_End - timer_Start) * 60) * 60 -- Convert seconds to minutes and minutes to hours for better timer resolution
         if runtime <= 12959999 then
-            WriteInt(game_Time - offset, runtime)
+            WriteInt(game_Time, runtime)
         else
-            WriteInt(game_Time - offset, (runtime / 60)) -- Timer reached an hour, return to standard units
+            WriteInt(game_Time, (runtime / 60)) -- Timer reached an hour, return to standard units
         end
     end
 end
@@ -98,7 +98,7 @@ function _OnFrame()
 	if canExecute == true then
 		timer()
 
-		controller = ReadLong(input - offset) -- Get controller state
+		controller = ReadLong(input) -- Get controller state
 
 		-- Set 12 hour time
 		if controller == 55834640448 or controller == 196672 then -- L2 + R2 + Left
@@ -118,7 +118,7 @@ function _OnFrame()
 		if controller == 56103010432 or controller == 196736 then -- L2 + R2 + Right
 			if bounce ~= controller then
 				mode = Nil
-				WriteInt(game_Time - offset, calculate_Game_Time())
+				WriteInt(game_Time, calculate_Game_Time())
 			end
 		end
 
@@ -127,7 +127,7 @@ function _OnFrame()
 			if bounce ~= controller then
 				if heart == false then
 					timer_Start = os.clock()
-					WriteInt(game_Time - offset, 0)
+					WriteInt(game_Time, 0)
 				end
 				if heart == true then
 					timer_End = os.clock()
